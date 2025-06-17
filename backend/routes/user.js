@@ -4,6 +4,7 @@ const zo = require("zod");
 const { User } = require("../db");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
+const { authMiddleware } = require("../middleware");
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const singupbody = zo.object({
 });
 
 router.post("/signup", async (req, res) => {
-  const {success} = singupbody.safeParse(req.body);
+  const { success } = singupbody.safeParse(req.body);
   if (!success) {
     console.log("Email already taken/wrong input");
     return res.status(411).json({
@@ -37,21 +38,19 @@ router.post("/signup", async (req, res) => {
   });
   const userid = newUser._id;
 
-    const token = jwt.sign({ userid, }, JWT_SECRET);
-    res.json({
-        msg: `User was Created`,
-        token:token
-    })
-    
+  const token = jwt.sign({ userid }, JWT_SECRET);
+  return res.json({
+    msg: `User was Created`,
+    token: token,
+  });
 });
-
 
 router.post("/signin", async (req, res) => {
   const signinbody = zo.object({
     username: zo.string().email(),
-    password: zo.string()
-  })
-  const { success } = signinbody.safeParse(req.body)
+    password: zo.string(),
+  });
+  const { success } = signinbody.safeParse(req.body);
   if (!success) {
     console.log("Email already taken/wrong input");
     return res.status(411).json({
@@ -60,22 +59,46 @@ router.post("/signin", async (req, res) => {
   }
   const user = await User.findOne({
     username: req.body.username,
-    password:req.body.password
-  })
-  if (!user)
-  {
-    console.log("wrong email or password")
-    res.status(411).json({
-      msg:"wrong email or password"
-    })
+    password: req.body.password,
+  });
+  if (!user) {
+    console.log("wrong email or password");
+    return res.status(411).json({
+      msg: "wrong email or password",
+    });
   }
-  const token = jwt.sign({ userid: user._id }, JWT_SECRET)
-  res.status(200).json({
+  const token = jwt.sign({ userid: user._id }, JWT_SECRET);
+  return res.status(200).json({
     msg: "User signed in",
-    token:token
-  })
-
-
+    token: token,
+  });
 });
+
+router.put("/", authMiddleware, async (req, res) => {
+  const updateBody = zo.object({
+    password: zo.string().optional(),
+    firstName: zo.string().optional(),
+    lastName: zo.string().optional(),
+  });
+  const { success } = updateBody.safeParse(req.body);
+  if (!success) {
+    res.status(411).json({
+      message: "Error while updating information",
+    });
+  }
+  await User.updateOne(
+    {
+      _id: req.userid,
+    },
+    { $set: req.body }
+  );
+
+  res.json({
+    message: "Updated successfully",
+  });
+});
+
+
+
 
 module.exports = router;
