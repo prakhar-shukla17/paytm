@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
 })
 
 const User = mongoose.model('User', userSchema)
-module.exports = { User }
+
 
 const accountSchema = new mongoose.Schema({
     userid: {
@@ -17,23 +17,23 @@ const accountSchema = new mongoose.Schema({
         ref:'User'
     },
     balance: {
-        type: float,
+        type: Number,
         required:true
     }
 })
 
 const Account = mongoose.model("Account", accountSchema)
 
-module.exports = { Account }
+module.exports = { User,Account }
 
 
-const transferFunds = async (fromAccountId, toAccountId, amount) => {
-    // Decrement the balance of the fromAccount
-	  await Account.findByIdAndUpdate(fromAccountId, { $inc: { balance: -amount } });
+// const transferFunds = async (fromAccountId, toAccountId, amount) => {
+//     // Decrement the balance of the fromAccount
+// 	  await Account.findByIdAndUpdate(fromAccountId, { $inc: { balance: -amount } });
 
-    // Increment the balance of the toAccount
-    await Account.findByIdAndUpdate(toAccountId, { $inc: { balance: amount } });
-}
+//     // Increment the balance of the toAccount
+//     await Account.findByIdAndUpdate(toAccountId, { $inc: { balance: amount } });
+// }
 
-// Example usage
-transferFunds('fromAccountID', 'toAccountID', 100);
+// // Example usage
+// transferFunds('fromAccountID', 'toAccountID', 100);
