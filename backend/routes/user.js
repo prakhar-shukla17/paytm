@@ -99,6 +99,19 @@ router.put("/", authMiddleware, async (req, res) => {
 });
 
 
+router.get("/bulk", async (req, res) => {
+  const filter = req.query.filter
 
+  try {
+    const filteredUsers = await User.find({ $or: [{ firstName: {$regex :filter} }, { lastName:{ $regex:filter }}] }).select("firstName lastName")
+    console.log(filteredUsers)
+   return  res.status(200).json({
+      filteredUsers: filteredUsers
+    })
+  } catch (err)
+  {
+    return res.status(400).json(err)
+  }
+})
 
 module.exports = router;
